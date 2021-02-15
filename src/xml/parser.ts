@@ -1,9 +1,28 @@
 const parseNameAndType = (line: string) => {
     return {
         name: /name="([^"]+)"/.exec(line)[1],
-        type: /\<([^ ]+)/.exec(line)[1]
+        type: /^\<([^ ]+)/.exec(line)[1]
     };
 }
+
+const getDependencies = (lines: Array<string>, tagName: string) => {
+    const dependencies = [];
+    let mode = 'skip';
+    for (let line of lines) {
+        if (line == `<${tagName}>`) {
+            mode = 'append';
+            continue;
+        }
+        else if (line == `</${tagName}>`) {
+            mode = 'skip';
+            continue;
+        }
+
+        if (mode == 'append') dependencies.push(line);
+    }
+
+    return dependencies;
+};
 
 export const parse = (input: string) => {
     const lines = input
@@ -11,30 +30,9 @@ export const parse = (input: string) => {
         .map(l => l.trim())
         .filter(l => l.length > 0);
 
-    let context = 'class';
-    const afferent = [];
-    const efferent = [];
-    for (let line of lines) {
-        if (line == '<afferent>') {
-            context = 'afferent';
-            continue;
-        }
-        if (line == '<efferent>') {
-            context = 'efferent';
-            continue;
-        }
-        if (line == '</afferent>' || line == '</efferent>') {
-            context = 'class';
-            continue;
-        }
-
-        if (context == 'afferent') afferent.push(parseNameAndType(line));
-        if (context == 'efferent') efferent.push(parseNameAndType(line));
-    }
-
     return {
         ...parseNameAndType(lines[0]),
-        afferent,
-        efferent
+        afferent: getDependencies(lines, 'afferent').map(parseNameAndType),
+        efferent: getDependencies(lines, 'efferent').map(parseNameAndType)
     };
 };

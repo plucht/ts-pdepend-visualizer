@@ -1,4 +1,3 @@
-import { fileURLToPath } from "url";
 import { parse } from '../../src/xml/parser';
 
 const fixture = `
