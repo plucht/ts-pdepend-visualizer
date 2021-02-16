@@ -28,7 +28,8 @@ export const parse = (input: string) => {
     const lines = input
         .split('\n')
         .map(l => l.trim())
-        .filter(l => l.length > 0);
+        .filter(l => l.length > 0)
+    ;
 
     return {
         ...parseNameAndType(lines[0]),
