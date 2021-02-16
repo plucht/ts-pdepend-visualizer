@@ -24,9 +24,30 @@ const getDependencies = (lines: Array<string>, tagName: string) => {
     return dependencies;
 };
 
-export const parse = (input: string) => {
+const findBoundaries = (lines: Array<string>) => {
+    const lineNumbers = lines
+        .map((line, lineNumber) => /class/.test(line) ? lineNumber : 0)
+        .filter(lineNumber => lineNumber > 0);
+
+    const chunks = [];
+    let index = 0;
+    while (index < lineNumbers.length) {
+        chunks.push(lineNumbers.slice(index, index + 2));
+        index += 2;
+    }
+
+    return chunks
+        .map(([start, end]: [number, number]) => {
+            return {start, end};
+        });
+};
+
+const getDefinition = (lines: Array<string>) => {
+    return ({start, end}:  {start: number, end: number}) => lines.slice(start, end);
+};
+
+export const parse = (input: Array<string>) => {
     const lines = input
-        .split('\n')
         .map(l => l.trim())
         .filter(l => l.length > 0)
     ;
@@ -36,4 +57,14 @@ export const parse = (input: string) => {
         afferent: getDependencies(lines, 'afferent').map(parseNameAndType),
         efferent: getDependencies(lines, 'efferent').map(parseNameAndType)
     };
+};
+
+export const parseFile = (input: string) => {
+    const lines = input.split('\n');
+    const packDefinition = getDefinition(lines);
+
+    return findBoundaries(lines)
+        .map(packDefinition)
+        .map(parse)
+    ;
 };
